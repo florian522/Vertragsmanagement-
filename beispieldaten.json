@@ -1,0 +1,600 @@
+{
+  "format": "vertraege-1",
+  "exportiert": "2026-11-04",
+  "settings": {
+    "mitglieder": [
+      {
+        "id": "m_florian",
+        "name": "Florian"
+      },
+      {
+        "id": "m_samira",
+        "name": "Samira"
+      },
+      {
+        "id": "m_samuel",
+        "name": "Samuel"
+      },
+      {
+        "id": "m_benajah",
+        "name": "Benajah"
+      },
+      {
+        "id": "m_elisa",
+        "name": "Elisa"
+      },
+      {
+        "id": "m_smudo",
+        "name": "Smudo"
+      },
+      {
+        "id": "m_vwid4gtx",
+        "name": "VW ID.4 GTX"
+      },
+      {
+        "id": "m_vwtouran",
+        "name": "VW Touran"
+      }
+    ],
+    "vorlauf": 30
+  },
+  "vertraege": [
+    {
+      "id": "jnnkc7kqk4z9j2r",
+      "status": "aktiv",
+      "gegenstand": "Fitnessstudio",
+      "kategorie": "mitglied",
+      "partner": "FitX",
+      "nummer": "FX-4410923",
+      "paperless": "",
+      "inhaber": "m_florian",
+      "betrifft": [
+        "m_florian"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Basic",
+          "beginn": "2025-03-01",
+          "ende": "2026-02-28",
+          "beitrag": 29.9,
+          "zahlweise": "monatlich",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "jederzeit",
+          "verlWert": 1,
+          "verlEinheit": "monate",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "r6iuztg14h7joln",
+      "status": "aktiv",
+      "gegenstand": "Privathaftpflicht",
+      "kategorie": "versicherung",
+      "partner": "HUK-Coburg",
+      "nummer": "PH-4471203",
+      "paperless": "",
+      "inhaber": "m_florian",
+      "betrifft": [
+        "m_florian",
+        "m_samira",
+        "m_samuel",
+        "m_benajah",
+        "m_elisa"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Plus",
+          "beginn": "2025-01-01",
+          "ende": "2025-12-31",
+          "beitrag": 89.9,
+          "zahlweise": "jahr",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        },
+        {
+          "vid": "s2",
+          "tarif": "Plus",
+          "beginn": "2026-01-01",
+          "ende": "2026-12-31",
+          "beitrag": 94.5,
+          "zahlweise": "jahr",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "Beitragsanpassung zum Jahreswechsel",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "81gtb6tiblyhw8h",
+      "status": "aktiv",
+      "gegenstand": "Handyvertrag Samira",
+      "kategorie": "tele",
+      "partner": "congstar",
+      "nummer": "CS-20919334",
+      "paperless": "",
+      "inhaber": "m_samira",
+      "betrifft": [
+        "m_samira"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Allnet Flat M",
+          "beginn": "2025-09-01",
+          "ende": "2027-08-31",
+          "beitrag": 15.0,
+          "zahlweise": "monatlich",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "jederzeit",
+          "verlWert": 1,
+          "verlEinheit": "monate",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "sdn8q1c3wfw0h29",
+      "status": "aktiv",
+      "gegenstand": "Hausratversicherung",
+      "kategorie": "versicherung",
+      "partner": "Allianz",
+      "nummer": "HR-88213-02",
+      "paperless": "",
+      "inhaber": "m_samira",
+      "betrifft": [],
+      "objekt": "Wohnung",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Komfort",
+          "beginn": "2024-04-01",
+          "ende": "2025-03-31",
+          "beitrag": 156.0,
+          "zahlweise": "jahr",
+          "fristWert": 3,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        },
+        {
+          "vid": "s2",
+          "tarif": "Komfort",
+          "beginn": "2025-04-01",
+          "ende": "2026-03-31",
+          "beitrag": 162.0,
+          "zahlweise": "jahr",
+          "fristWert": 3,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        },
+        {
+          "vid": "s3",
+          "tarif": "Komfort",
+          "beginn": "2026-04-01",
+          "ende": "2027-03-31",
+          "beitrag": 168.0,
+          "zahlweise": "jahr",
+          "fristWert": 3,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "h6wv1en0bacc9y1",
+      "status": "aktiv",
+      "gegenstand": "Internet",
+      "kategorie": "tele",
+      "partner": "Telekom",
+      "nummer": "KD-778120455",
+      "paperless": "",
+      "inhaber": "m_florian",
+      "betrifft": [
+        "m_florian",
+        "m_samira",
+        "m_samuel",
+        "m_benajah",
+        "m_elisa"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "MagentaZuhause L",
+          "beginn": "2024-06-15",
+          "ende": "2026-06-14",
+          "beitrag": 49.95,
+          "zahlweise": "monatlich",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "jederzeit",
+          "verlWert": 1,
+          "verlEinheit": "monate",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "7zav6eaqwwh6ecg",
+      "status": "aktiv",
+      "gegenstand": "Kfz-Versicherung ID.4",
+      "kategorie": "versicherung",
+      "partner": "HUK24",
+      "nummer": "KFZ-55120987",
+      "paperless": "",
+      "inhaber": "m_florian",
+      "betrifft": [
+        "m_vwid4gtx"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Vollkasko, SB 300/150",
+          "beginn": "2025-01-01",
+          "ende": "2025-12-31",
+          "beitrag": 61.4,
+          "zahlweise": "monatlich",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        },
+        {
+          "vid": "s2",
+          "tarif": "Vollkasko, SB 300/150",
+          "beginn": "2026-01-01",
+          "ende": "2026-12-31",
+          "beitrag": 64.8,
+          "zahlweise": "monatlich",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "Typklasse gestiegen",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "ic8l8hwu6x5qvo5",
+      "status": "aktiv",
+      "gegenstand": "Kfz-Versicherung Touran",
+      "kategorie": "versicherung",
+      "partner": "HUK24",
+      "nummer": "KFZ-55120988",
+      "paperless": "",
+      "inhaber": "m_samira",
+      "betrifft": [
+        "m_vwtouran"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Teilkasko, SB 150",
+          "beginn": "2026-01-01",
+          "ende": "2026-12-31",
+          "beitrag": 41.2,
+          "zahlweise": "monatlich",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "qspg0bp1mvrk227",
+      "status": "aktiv",
+      "gegenstand": "Leasing ID.4 GTX",
+      "kategorie": "kredit",
+      "partner": "VW Leasing",
+      "nummer": "LV-9021774",
+      "paperless": "",
+      "inhaber": "m_florian",
+      "betrifft": [
+        "m_vwid4gtx"
+      ],
+      "objekt": "",
+      "notizen": "Rückgabe vereinbaren",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "36 Monate, 10.000 km/Jahr",
+          "beginn": "2024-04-01",
+          "ende": "2027-03-31",
+          "beitrag": 489.0,
+          "zahlweise": "monatlich",
+          "fristWert": 0,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 0,
+          "verlEinheit": "keine",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "9kveyyiajldqngr",
+      "status": "aktiv",
+      "gegenstand": "Netflix",
+      "kategorie": "abo",
+      "partner": "Netflix",
+      "nummer": "",
+      "paperless": "",
+      "inhaber": "m_florian",
+      "betrifft": [
+        "m_florian",
+        "m_samira",
+        "m_samuel",
+        "m_benajah",
+        "m_elisa"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Standard",
+          "beginn": "2023-11-12",
+          "ende": "",
+          "beitrag": 13.99,
+          "zahlweise": "monatlich",
+          "fristWert": 0,
+          "fristEinheit": "tage",
+          "fristModus": "monatsende",
+          "verlWert": 1,
+          "verlEinheit": "monate",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "5bmocaqagkex0fx",
+      "status": "aktiv",
+      "gegenstand": "Rechtsschutzversicherung",
+      "kategorie": "versicherung",
+      "partner": "ARAG",
+      "nummer": "RS-3390154",
+      "paperless": "",
+      "inhaber": "m_florian",
+      "betrifft": [
+        "m_florian",
+        "m_samira",
+        "m_samuel",
+        "m_benajah",
+        "m_elisa"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Aktiv-Rechtsschutz Komfort",
+          "beginn": "2025-08-01",
+          "ende": "2026-07-31",
+          "beitrag": 276.0,
+          "zahlweise": "jahr",
+          "fristWert": 3,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        },
+        {
+          "vid": "s2",
+          "tarif": "Aktiv-Rechtsschutz Komfort",
+          "beginn": "2026-08-01",
+          "ende": "2027-07-31",
+          "beitrag": 289.0,
+          "zahlweise": "jahr",
+          "fristWert": 3,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "x31lhnj6f7i2ip4",
+      "status": "aktiv",
+      "gegenstand": "Strom",
+      "kategorie": "energie",
+      "partner": "Stadtwerke",
+      "nummer": "ST-100482",
+      "paperless": "",
+      "inhaber": "m_florian",
+      "betrifft": [],
+      "objekt": "Wohnung",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Ökostrom Fix 12",
+          "beginn": "2025-02-01",
+          "ende": "2026-01-31",
+          "beitrag": 118.0,
+          "zahlweise": "monatlich",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "jederzeit",
+          "verlWert": 1,
+          "verlEinheit": "monate",
+          "kwh": 28.4,
+          "grundpreis": 12.9,
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        },
+        {
+          "vid": "s2",
+          "tarif": "Ökostrom Fix 12",
+          "beginn": "2026-02-01",
+          "ende": "2027-01-31",
+          "beitrag": 128.0,
+          "zahlweise": "monatlich",
+          "fristWert": 1,
+          "fristEinheit": "monate",
+          "fristModus": "jederzeit",
+          "verlWert": 1,
+          "verlEinheit": "monate",
+          "kwh": 29.8,
+          "grundpreis": 13.5,
+          "notiz": "Preiserhöhung, Sonderkündigungsrecht nicht genutzt",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "3znwa595y0pdr4r",
+      "status": "aktiv",
+      "gegenstand": "Tierkrankenversicherung Smudo",
+      "kategorie": "versicherung",
+      "partner": "Uelzener",
+      "nummer": "TK-702144",
+      "paperless": "",
+      "inhaber": "m_samira",
+      "betrifft": [
+        "m_smudo"
+      ],
+      "objekt": "",
+      "notizen": "",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "OP-Schutz",
+          "beginn": "2025-06-01",
+          "ende": "2026-05-31",
+          "beitrag": 22.5,
+          "zahlweise": "monatlich",
+          "fristWert": 3,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    },
+    {
+      "id": "uhipup91j8rbqb7",
+      "status": "aktiv",
+      "gegenstand": "Sportverein",
+      "kategorie": "mitglied",
+      "partner": "TSV Turnverein",
+      "nummer": "",
+      "paperless": "",
+      "inhaber": "m_samira",
+      "betrifft": [
+        "m_samuel",
+        "m_elisa"
+      ],
+      "objekt": "",
+      "notizen": "Kündigung schriftlich an die Geschäftsstelle",
+      "versionen": [
+        {
+          "vid": "s1",
+          "tarif": "Familienbeitrag Kinder",
+          "beginn": "2024-01-01",
+          "ende": "2024-12-31",
+          "beitrag": 180.0,
+          "zahlweise": "jahr",
+          "fristWert": 3,
+          "fristEinheit": "monate",
+          "fristModus": "ablauf",
+          "verlWert": 1,
+          "verlEinheit": "jahre",
+          "kwh": "",
+          "grundpreis": "",
+          "notiz": "",
+          "erfasst": "2026-11-04"
+        }
+      ]
+    }
+  ]
+}
