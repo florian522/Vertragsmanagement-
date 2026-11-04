@@ -40,6 +40,8 @@
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
+html,body{overflow-x:hidden}
+input[type=date]{-webkit-appearance:none;appearance:none;min-height:44px}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;margin:0;line-height:1.15}
@@ -53,28 +55,31 @@ button,input,select,textarea{font:inherit;color:inherit}
 .icon-btn{background:none;border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;color:var(--ink)}
 .hero{margin:6px 0 22px}
 .hero .lead{font-size:.95rem;color:var(--muted);margin:0 0 4px}
-.hero h1{font-size:clamp(1.9rem,7vw,2.9rem);font-weight:700;letter-spacing:-.01em}
-.hero h1 .when{display:block;color:var(--muted);font-weight:500;font-size:.62em;margin-top:6px}
-.hero.urgent h1 .when{color:var(--warn)}
+.hero h1{font-weight:700;letter-spacing:-.01em}
+.hero h1 .name{display:block;width:100%;white-space:nowrap;font-size:40px;line-height:1.1}
+.hero .when{margin:8px 0 0;color:var(--muted);font:500 1.2rem/1.3 "Bricolage Grotesque",system-ui,sans-serif}
+.hero.urgent .when{color:var(--warn)}
 .sum{display:flex;gap:28px;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:18px}
 .sum div{font-size:.9rem;color:var(--muted)}
 .sum strong{display:block;font-size:1.3rem;color:var(--ink);font-family:"Bricolage Grotesque",sans-serif;font-variant-numeric:tabular-nums}
 
 /* Filter */
-.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none}
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;scrollbar-width:none;touch-action:pan-x}
 .chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;cursor:pointer;font-size:.92rem}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .search{width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:16px}
 
 /* Karten mit Registerreiter */
-.list{display:flex;flex-direction:column;gap:22px}
+.list{display:flex;flex-direction:column;gap:30px;padding-top:24px}
 .card{position:relative;display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:0 12px 12px 12px;padding:14px 16px;cursor:pointer;color:var(--ink)}
 .card .tab{position:absolute;left:-1px;top:-21px;height:21px;padding:2px 12px 0;font-size:.75rem;font-weight:700;color:#fff;background:var(--cat);border-radius:8px 8px 0 0;white-space:nowrap}
 .card.inactive{opacity:.6}
 .row1{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
-.card h3{font-size:1.15rem;font-weight:700}
-.amount{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700}
-.amount small{font-weight:400;color:var(--muted);margin-left:3px}
+.card h3{font-size:1.15rem;font-weight:700;overflow-wrap:anywhere;hyphens:auto}
+.row2{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-top:4px}
+.row2 .sub{margin:0;flex:1;min-width:0}
+.amount{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700}
+.amount small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
 .sub{margin:2px 0 0;color:var(--muted);font-size:.93rem}
 .due{margin:10px 0 0;font-size:.93rem;padding-top:10px;border-top:1px dashed var(--line)}
 .due.soon{color:var(--warn);font-weight:700}
@@ -82,12 +87,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 .empty{padding:40px 0;text-align:left}
 .empty p{color:var(--muted)}
 
-.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--accent);color:var(--accent-ink);border:0;border-radius:14px;padding:14px 22px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(10,30,40,.25);z-index:5}
+.fab{white-space:nowrap;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--accent);color:var(--accent-ink);border:0;border-radius:14px;padding:14px 22px;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(10,30,40,.25);z-index:5}
 .note{font-size:.85rem;color:var(--muted);margin:0 0 14px;padding:10px 12px;background:var(--soft);border-radius:10px}
 
 /* Dialoge */
 dialog{border:0;padding:0;background:var(--surface);color:var(--ink);width:min(640px,100%);max-height:92vh;border-radius:18px;overflow:hidden}
+dialog{max-width:100vw;overflow-x:hidden;overscroll-behavior:contain}
 dialog::backdrop{background:rgba(8,18,24,.5)}
+.sheet-body{overflow-x:hidden;touch-action:pan-y}
+.grid2 > *{min-width:0}
+label > input,label > select,label > textarea{min-width:0;max-width:100%}
 @media (max-width:640px){
   dialog{margin:auto 0 0;max-width:100%;border-radius:18px 18px 0 0;max-height:94vh}
 }
@@ -387,6 +396,14 @@ function showNote(){}
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const mName = id => (settings.mitglieder.find(m=>m.id===id)||{}).name || '';
 
+function fitHero(){
+  const el=document.querySelector('#hero .name'); if(!el || el.style.whiteSpace==='normal') return;
+  let size=40; el.style.fontSize=size+'px';
+  while(el.scrollWidth>el.clientWidth && size>20){ size--; el.style.fontSize=size+'px'; }
+  if(el.scrollWidth>el.clientWidth){ el.style.whiteSpace='normal'; el.style.overflowWrap='anywhere'; }
+}
+window.addEventListener('resize',()=>fitHero());
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>fitHero());
 function render(){
   const aktiv = vertraege.filter(istAktiv);
   // Hero
@@ -394,15 +411,16 @@ function render(){
   const naechste = aktiv.map(c=>({c,b:berechne(c)})).filter(x=>x.b.typ==='termin').sort((a,b)=>a.b.bis-b.b.bis)[0];
   if(!vertraege.length){
     hero.className='hero';
-    hero.innerHTML=`<h1>Alle Verträge an einem Ort.<span class="when">Leg deinen ersten Vertrag an, die Kündigungstermine rechnet die App selbst.</span></h1>`;
+    hero.innerHTML=`<h1><span class="name" style="white-space:normal">Alle Verträge an einem Ort.</span></h1><p class="when">Leg deinen ersten Vertrag an, die Kündigungstermine rechnet die App selbst.</p>`;
   } else if(naechste){
     const n=tageBis(naechste.b.bis);
     hero.className='hero'+(n<=settings.vorlauf?' urgent':'');
-    hero.innerHTML=`<p class="lead">Nächste Kündigungsfrist</p><h1>${esc(naechste.c.gegenstand)}<span class="when">bis ${fmt(naechste.b.bis)}, ${inTagen(n)}</span></h1>`;
+    hero.innerHTML=`<p class="lead">Nächste Kündigungsfrist</p><h1><span class="name">${esc(naechste.c.gegenstand)}</span></h1><p class="when">bis ${fmt(naechste.b.bis)}, ${inTagen(n)}</p>`;
   } else {
     hero.className='hero';
-    hero.innerHTML=`<p class="lead">Nächste Kündigungsfrist</p><h1>Keine Frist in Sicht.</h1>`;
+    hero.innerHTML=`<p class="lead">Nächste Kündigungsfrist</p><h1><span class="name">Keine Frist in Sicht.</span></h1>`;
   }
+  fitHero();
   // Summen
   const sum=document.getElementById('sum');
   const jahr = aktiv.reduce((s,c)=>s+jahresBeitrag(aktuell(c)),0);
@@ -421,7 +439,7 @@ function render(){
     else { if(!istAktiv(c)) return false;
       if(filter==='bald' && !istBald(c)) return false;
       if(filter!=='alle' && filter!=='bald' && c.kategorie!==filter) return false; }
-    if(q){ const v=aktuell(c); const hay=[c.gegenstand,c.partner,v.tarif,c.nummer,c.objekt].join(' ').toLowerCase(); if(!hay.includes(q)) return false; }
+    if(q){ const v=aktuell(c); const hay=[c.gegenstand,c.partner,v.tarif,c.nummer,c.kundennummer,c.objekt].join(' ').toLowerCase(); if(!hay.includes(q)) return false; }
     return true;
   });
   const key = c => { const b=berechne(c); return b.bis ? +b.bis : b.termin ? +b.termin + 1e13 : 9e15; };
@@ -434,8 +452,8 @@ function render(){
     const sub=[c.partner, v.tarif].filter(Boolean).map(esc).join(', ');
     return `<button class="card${istAktiv(c)?'':' inactive'}" data-id="${esc(c.id)}" style="--cat:${katColor(c.kategorie)}">
       <span class="tab">${esc(katName(c.kategorie))}</span>
-      <div class="row1"><h3>${esc(c.gegenstand)}</h3><span class="amount">${EUR.format(+v.beitrag||0)}<small>${zw}</small></span></div>
-      ${sub?`<p class="sub">${sub}</p>`:''}
+      <h3>${esc(c.gegenstand)}</h3>
+      <div class="row2"><p class="sub">${sub}</p><span class="amount">${EUR.format(+v.beitrag||0)}<small>${zw}</small></span></div>
       <p class="due ${f.soon?'soon':'calm'}">${esc(f.t)}</p>
     </button>`;
   }).join('');
@@ -507,7 +525,7 @@ function vertragForm(c){
       <label>Vertragsgegenstand<input name="gegenstand" required value="${esc(c.gegenstand)}" placeholder="z. B. Hausratversicherung"></label>
       <label>Kategorie<select name="kategorie">${KAT.map(k=>`<option value="${k.k}"${k.k===c.kategorie?' selected':''}>${k.n}</option>`).join('')}</select></label>
       <label>Versicherung / Anbieter<input name="partner" value="${esc(c.partner)}"></label>
-      <label>Vertrags- oder Kundennummer<input name="nummer" value="${esc(c.nummer)}"></label>
+      <div class="grid2"><label>Vertragsnummer<input name="nummer" value="${esc(c.nummer)}"></label><label>Kundennummer<input name="kundennummer" value="${esc(c.kundennummer)}"></label></div>
       <label>Link zum Dokument in Paperless<input name="paperless" type="url" value="${esc(c.paperless)}" placeholder="https://"></label>
       ${ms.length?`<label>Vertragsinhaber<select name="inhaber"><option value="">–</option>${ms.map(m=>`<option value="${esc(m.id)}"${m.id===c.inhaber?' selected':''}>${esc(m.name)}</option>`).join('')}</select></label>`:''}
       <label style="margin-bottom:4px">Versichert bzw. betrifft</label>${memberHtml}
@@ -524,7 +542,7 @@ function vertragForm(c){
     const g=n=>f.elements[n]?.value?.trim()||'';
     const nv=readVersion(f);
     const data={ ...(neu?{id:uid(), status:'aktiv'}:c),
-      gegenstand:g('gegenstand'), kategorie:g('kategorie'), partner:g('partner'), nummer:g('nummer'), paperless:g('paperless'),
+      gegenstand:g('gegenstand'), kategorie:g('kategorie'), partner:g('partner'), nummer:g('nummer'), kundennummer:g('kundennummer'), paperless:g('paperless'),
       inhaber:g('inhaber'), objekt:g('objekt'), notizen:g('notizen'),
       betrifft:[...f.querySelectorAll('input[name=betrifft]:checked')].map(x=>x.value) };
     if(neu) data.versionen=[nv];
@@ -584,7 +602,8 @@ function detail(id){
       ${row('Kategorie',esc(katName(c.kategorie)))}
       ${row('Anbieter',esc(c.partner))}
       ${row('Tarif',esc(v.tarif))}
-      ${row('Nummer',esc(c.nummer))}
+      ${row('Vertragsnummer',esc(c.nummer))}
+      ${row('Kundennummer',esc(c.kundennummer))}
       ${row('Inhaber',esc(mName(c.inhaber)))}
       ${row('Betrifft',esc(betrifft))}
       ${row('Beitrag',`${EUR.format(+v.beitrag||0)} ${zw}, ${EUR.format(jahresBeitrag(v))} im Jahr`)}
