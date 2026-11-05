@@ -372,7 +372,18 @@ function init(){
   if(srv && srv.url && window.PocketBase){ connect(srv.url); if(pb.authStore.isValid){ setSync('syncing'); flush().then(sync); } else setSync('login'); }
   else { setSync('local'); if(window.PocketBase) loginDialog(); }
   window.addEventListener('online',()=>{ flush().then(sync); });
+  checkUpdate(); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkUpdate(); });
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') flush().then(sync); });
+}
+const APP_VERSION='2026-11-05-1';
+async function checkUpdate(){
+  if(!location.protocol.startsWith('http')) return;
+  try{
+    const base=location.origin+location.pathname;
+    const r=await fetch(base+'?check='+Date.now(),{cache:'no-store'}); if(!r.ok) return;
+    const m=(await r.text()).match(/APP_VERSION='([^']+)'/);
+    if(m && m[1]!==APP_VERSION && !pending.length && !flushing && !dlg.open) location.replace(base+'?v='+encodeURIComponent(m[1]));
+  }catch(e){}
 }
 function exportJson(){
   const blob=new Blob([JSON.stringify({format:'vertraege-1',exportiert:iso(heute()),settings,vertraege},null,2)],{type:'application/json'});
