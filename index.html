@@ -53,6 +53,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .top h2{font-size:1.05rem;font-weight:700;color:var(--muted)}
 .top-actions{display:flex;gap:8px}
+.pl-list{max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:4px 12px;background:var(--soft)}
+.pl-group{font-weight:700;font-size:.85rem;color:var(--muted);margin:10px 0 4px}
+label.pl-row{display:flex;align-items:center;gap:10px;margin:0;padding:8px 0;border-bottom:1px solid var(--line);color:var(--ink);font-size:.95rem;cursor:pointer}
+label.pl-row[hidden]{display:none}
+label.pl-row input{width:18px;height:18px;margin:0;flex:none}
+label.pl-row span{flex:1;min-width:0;overflow-wrap:anywhere}
+label.pl-row small{color:var(--muted)}
 .icon-btn svg{display:block}
 .icon-btn{background:none;border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;color:var(--ink)}
 .hero{margin:6px 0 22px}
@@ -379,7 +386,7 @@ function init(){
   checkUpdate(); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkUpdate(); });
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') flush().then(sync); });
 }
-const APP_VERSION='2026-11-07-1';
+const APP_VERSION='2026-11-08-1';
 async function checkUpdate(){
   if(!location.protocol.startsWith('http')) return;
   try{
@@ -694,8 +701,10 @@ let plOffen = false, plLetzterAuto = 0;
 const kiKey = () => ki.keys[ki.provider] || '';
 const plToken = () => ls.get(K_PL_TOKEN,'') || '';
 const plBase = () => String(settings.paperlessUrl||'').trim().replace(/\/+$/,'');
-const plFilter = () => settings.paperlessFilter || null;
-const plBereit = () => !!(plBase() && plToken() && plFilter() && plFilter().id);
+const plQuellen = () => Array.isArray(settings.paperlessQuellen) ? settings.paperlessQuellen : (settings.paperlessFilter ? [settings.paperlessFilter] : []);
+const plBereit = () => !!(plBase() && plToken() && plQuellen().length);
+const plQuellenText = () => { const q=plQuellen(); return q.length<=3 ? q.map(x=>`„${x.name}“`).join(', ') : `${q.length} Tags und Dokumenttypen`; };
+let plListen = null;
 const docLink = id => `${plBase()}/documents/${id}/details`;
 function saveVs(){ ls.set(K_VS,vorschlaege); }
 
@@ -804,10 +813,12 @@ async function plNeueDokumente(){
   const done=new Set(settings.paperlessErledigt||[]);
   vertraege.forEach(c=>(c.dokumente||[]).forEach(d=>done.add(d.id)));
   vorschlaege.forEach(p=>done.add(p.docId));
-  const f=plFilter();
-  const q = f.typ==='d' ? `document_type__id__in=${encodeURIComponent(f.id)}` : `tags__id__all=${encodeURIComponent(f.id)}`;
-  const docs=await plAlle(`/api/documents/?${q}&page_size=100&ordering=created`);
-  return docs.filter(d=>!done.has(d.id));
+  const q=plQuellen();
+  const tIds=q.filter(x=>x.typ!=='d').map(x=>x.id), dIds=q.filter(x=>x.typ==='d').map(x=>x.id);
+  const alle=new Map();
+  if(tIds.length) (await plAlle(`/api/documents/?tags__id__in=${tIds.join(',')}&page_size=100&ordering=created`)).forEach(d=>alle.set(d.id,d));
+  if(dIds.length) (await plAlle(`/api/documents/?document_type__id__in=${dIds.join(',')}&page_size=100&ordering=created`)).forEach(d=>alle.set(d.id,d));
+  return [...alle.values()].filter(d=>!done.has(d.id)).sort((a,b)=>String(a.created||'').localeCompare(String(b.created||'')));
 }
 
 async function plAuswerten(opts){
@@ -939,7 +950,7 @@ function plDialog(reRender){
     ? `<p>Damit die App deine Vertragsdokumente aus Paperless lesen kann, trag unter Einstellungen die Paperless-Adresse, deinen API-Token und den Tag bzw. Dokumenttyp deiner Verträge ein.</p><div class="actions"><button class="btn primary" id="plSetup">Zu den Einstellungen</button></div>`
     : `${plState.fehler?`<div class="status-box soon"><strong>${esc(plState.fehler)}</strong></div>`:''}
        ${plState.laeuft?`<div class="status-box"><strong>${esc(plState.info)}</strong></div>`:''}
-       <p class="hint" style="margin:0 0 12px">Quelle: ${plFilter().typ==='d'?'Dokumenttyp':'Tag'} „${esc(plFilter().name)}“${plState.neu>0&&!plState.laeuft?`, ${plState.neu} neue Dokumente`:''}</p>
+       <p class="hint" style="margin:0 0 12px">Quellen: ${esc(plQuellenText())}${plState.neu>0&&!plState.laeuft?`, ${plState.neu} neue Dokumente`:''}</p>
        <div class="actions"><button class="btn${anzahl?'':' primary'}" id="plRun" ${plState.laeuft?'disabled':''}>Neue Dokumente auswerten</button>
        ${anzahl>1?`<button class="btn primary" id="plAll">Alle ${anzahl} übernehmen</button>`:''}</div>
        ${anzahl?listeNeu+listeStand:(!plState.laeuft?'<p class="hint" style="margin-top:16px">Gerade keine offenen Vorschläge.</p>':'')}
@@ -957,14 +968,15 @@ function plDialog(reRender){
 dlg.addEventListener('close',()=>{ plOffen=false; });
 
 function plEinstellungenHtml(){
-  const f=plFilter();
   return `<fieldset><legend>Paperless</legend>
       <label>Adresse<input id="plUrl" type="url" autocapitalize="off" value="${esc(settings.paperlessUrl||'')}" placeholder="https://paperless.…"></label>
       <label>API-Token<input id="plTok" type="password" autocomplete="off" value="${esc(plToken())}"></label>
       <p class="hint">Den Token findest du in Paperless oben rechts unter „Mein Profil“ bei „API Auth Token“. Er bleibt nur auf diesem Gerät.</p>
-      <label>Quelle der Vertragsdokumente<select id="plSel">${f?`<option value="${f.typ}:${f.id}" selected>${f.typ==='d'?'Dokumenttyp':'Tag'}: ${esc(f.name)}</option>`:'<option value="">Erst laden</option>'}</select></label>
+      <label style="margin-bottom:4px">Quellen der Vertragsdokumente</label>
+      <p class="hint" id="plSelInfo" style="margin:0 0 10px">${plQuellen().length?`Ausgewählt: ${esc(plQuellen().map(x=>x.name).join(', '))}`:'Noch nichts ausgewählt.'}</p>
       <div class="actions"><button class="btn" id="plLoad" type="button">Tags und Dokumenttypen laden</button></div>
       <p class="hint" id="plMsg" style="margin-top:10px"></p>
+      <div id="plList"></div>
     </fieldset>
     <fieldset><legend>KI für die Auswertung</legend>
       <label>Anbieter<select id="kiProv">${Object.entries(KI).map(([k,x])=>`<option value="${k}"${k===ki.provider?' selected':''}>${x.label}</option>`).join('')}</select></label>
@@ -976,18 +988,30 @@ function plEinstellungenBinden(){
   const msg=t=>{ const m=document.getElementById('plMsg'); if(m) m.textContent=t; };
   document.getElementById('plUrl').onchange=e=>{ settings={...settings, paperlessUrl:e.target.value.trim()}; saveSettings(); };
   document.getElementById('plTok').onchange=e=>ls.set(K_PL_TOKEN, e.target.value.trim());
-  document.getElementById('plSel').onchange=e=>{ const o=e.target.selectedOptions[0]; if(!o||!o.value) return; const [typ,id]=o.value.split(':');
-    settings={...settings, paperlessFilter:{typ, id:+id, name:o.dataset.name||o.textContent}}; saveSettings(); plLetzterAuto=0; };
+  const zeigeListe=()=>{
+    const box=document.getElementById('plList'); if(!box||!plListen) return;
+    const gew=new Set(plQuellen().map(x=>`${x.typ}:${x.id}`));
+    const zeile=(typ,x)=>{ const k=`${typ}:${x.id}`; return `<label class="pl-row" data-such="${esc(x.name.toLowerCase())}"><input type="checkbox" value="${k}" data-name="${esc(x.name)}"${gew.has(k)?' checked':''}><span>${esc(x.name)}</span><small>${x.document_count??0}</small></label>`; };
+    const sortiert=(typ,arr)=>[...arr].sort((a,b)=>(gew.has(`${typ}:${b.id}`)-gew.has(`${typ}:${a.id}`)) || a.name.localeCompare(b.name,'de'));
+    box.innerHTML=`<input class="search" id="plSuche" type="search" placeholder="Tags und Dokumenttypen durchsuchen" style="margin:12px 0 8px">
+      <div class="pl-list"><div class="pl-group">Tags</div>${sortiert('t',plListen.tags).map(x=>zeile('t',x)).join('')}
+      <div class="pl-group">Dokumenttypen</div>${sortiert('d',plListen.typen).map(x=>zeile('d',x)).join('')}</div>`;
+    document.getElementById('plSuche').oninput=e=>{ const q=e.target.value.trim().toLowerCase(); box.querySelectorAll('.pl-row').forEach(r=>r.hidden=!!q && !r.dataset.such.includes(q)); };
+    box.querySelectorAll('.pl-row input').forEach(cb=>cb.onchange=()=>{
+      const q=[...box.querySelectorAll('.pl-row input:checked')].map(i=>{ const [typ,id]=i.value.split(':'); return {typ, id:+id, name:i.dataset.name}; });
+      settings={...settings, paperlessQuellen:q}; delete settings.paperlessFilter; saveSettings(); plLetzterAuto=0;
+      const info=document.getElementById('plSelInfo'); if(info) info.textContent = q.length ? `Ausgewählt: ${q.map(x=>x.name).join(', ')}` : 'Noch nichts ausgewählt.';
+    });
+  };
   document.getElementById('plLoad').onclick=async()=>{
     msg('Lade …');
     try{
       const [tags,typen]=await Promise.all([plAlle('/api/tags/?page_size=500'), plAlle('/api/document_types/?page_size=500')]);
-      const f=plFilter(), cur=f?`${f.typ}:${f.id}`:'';
-      const opt=(typ,x)=>`<option value="${typ}:${x.id}" data-name="${esc(x.name)}"${`${typ}:${x.id}`===cur?' selected':''}>${esc(x.name)} (${x.document_count??0})</option>`;
-      document.getElementById('plSel').innerHTML=`<option value="">Bitte wählen</option><optgroup label="Tags">${tags.map(x=>opt('t',x)).join('')}</optgroup><optgroup label="Dokumenttypen">${typen.map(x=>opt('d',x)).join('')}</optgroup>`;
-      msg(`Verbindung klappt: ${tags.length} Tags und ${typen.length} Dokumenttypen gefunden.`);
+      plListen={tags,typen}; zeigeListe();
+      msg(`Verbindung klappt: ${tags.length} Tags und ${typen.length} Dokumenttypen gefunden. Hak alle an, unter denen Verträge liegen.`);
     }catch(e){ msg(errText(e)); }
   };
+  zeigeListe();
   document.getElementById('kiProv').onchange=e=>{ ki.provider=e.target.value; ls.set(K_KI,ki); const k=document.getElementById('kiKey'); k.value=kiKey(); k.placeholder=KI[ki.provider].placeholder; };
   document.getElementById('kiKey').onchange=e=>{ ki.keys[ki.provider]=e.target.value.trim(); ls.set(K_KI,ki); };
 }
