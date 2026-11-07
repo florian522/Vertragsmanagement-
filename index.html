@@ -52,6 +52,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* Kopf */
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .top h2{font-size:1.05rem;font-weight:700;color:var(--muted)}
+.top-actions{display:flex;gap:8px}
+.icon-btn svg{display:block}
 .icon-btn{background:none;border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;color:var(--ink)}
 .hero{margin:6px 0 22px}
 .hero .lead{font-size:.95rem;color:var(--muted);margin:0 0 4px}
@@ -146,9 +148,10 @@ dd a{color:var(--accent)}
 <div class="wrap">
   <div class="top">
     <h2>Haushaltsverträge</h2>
-    <button class="icon-btn" id="btnSettings" aria-label="Einstellungen">Einstellungen</button>
+    <div class="top-actions"><button class="icon-btn" id="btnPl">Paperless</button><button class="icon-btn" id="btnSettings" aria-label="Einstellungen"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
   </div>
   <p class="note" id="storeNote" hidden></p>
+  <p class="note" id="plNote" hidden></p>
   <section class="hero" id="hero"><p class="lead">Lade Verträge …</p></section>
   <div class="sum" id="sum" hidden></div>
   <input class="search" id="search" type="search" placeholder="Suchen nach Gegenstand, Anbieter, Nummer" aria-label="Suchen">
@@ -320,6 +323,7 @@ async function sync(){
     saveCache(); render(); setSync('ok');
     if(pending.length) await flush();
     subscribe();
+    plAuto();
   }catch(e){ handleError(e); }
   finally{ syncing=false; }
 }
@@ -375,7 +379,7 @@ function init(){
   checkUpdate(); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkUpdate(); });
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') flush().then(sync); });
 }
-const APP_VERSION='2026-11-05-1';
+const APP_VERSION='2026-11-07-1';
 async function checkUpdate(){
   if(!location.protocol.startsWith('http')) return;
   try{
@@ -416,6 +420,7 @@ function fitHero(){
 window.addEventListener('resize',()=>fitHero());
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>fitHero());
 function render(){
+  renderPlNote();
   const aktiv = vertraege.filter(istAktiv);
   // Hero
   const hero=document.getElementById('hero');
@@ -473,6 +478,7 @@ function render(){
 /* ---------- Dialoge ---------- */
 const dlg=document.getElementById('dlg'), sheet=document.getElementById('sheet');
 function open(title, body){
+  plOffen=false;
   sheet.innerHTML=`<div class="sheet-head"><h2>${esc(title)}</h2><button class="close" data-close aria-label="Schließen">×</button></div><div class="sheet-body">${body}</div>`;
   if(!dlg.open) dlg.showModal();
   sheet.querySelector('.sheet-body').scrollTop=0;
@@ -622,7 +628,7 @@ function detail(id){
       ${row('Verlängerung',verl)}
       ${row('Kündigungsfrist',esc(fristLabel))}
       ${c.status==='gekuendigt'?row('Gekündigt am',fmt(parse(c.gekuendigtAm))):''}
-      ${c.paperless?row('Dokument',`<a href="${esc(c.paperless)}" target="_blank" rel="noopener">In Paperless öffnen</a>`):''}
+      ${(c.dokumente||[]).length ? row('Dokumente', c.dokumente.slice().sort((a,b)=>(b.datum||'').localeCompare(a.datum||'')).map(d=>`<a href="${esc(docLink(d.id))}" target="_blank" rel="noopener">${esc(d.art||d.titel||'Dokument')}${d.datum?`, ${fmt(parse(d.datum))}`:''}</a>`).join('<br>')) : (c.paperless?row('Dokument',`<a href="${esc(c.paperless)}" target="_blank" rel="noopener">In Paperless öffnen</a>`):'')}
       ${row('Notizen',esc(c.notizen))}
     </dl>
     <div class="actions" style="margin-bottom:24px">
@@ -653,6 +659,7 @@ function einstellungen(){
       <fieldset><legend>Erinnerung</legend>
         <label>Als „bald kündbar“ markieren, wenn die Frist in weniger als so vielen Tagen abläuft<input type="number" min="1" id="vorlauf" value="${settings.vorlauf}"></label>
       </fieldset>
+      ${plEinstellungenHtml()}
       <fieldset><legend>Server</legend>
         ${pb && pb.authStore.isValid ? `<p class="hint" style="margin:0 0 10px">Angemeldet als ${esc(pb.authStore.record?.email || pb.authStore.model?.email || '')} bei ${esc(pb.baseURL||pb.baseUrl||'')}</p><button class="btn" id="btnLogout">Abmelden</button>` : `<button class="btn" id="btnLogin2">Mit dem Server verbinden</button>`}
       </fieldset>
@@ -661,6 +668,7 @@ function einstellungen(){
       </fieldset>`);
     const lo=document.getElementById('btnLogout'); if(lo) lo.onclick=async()=>{ if(pending.length && !confirm(`${pending.length} Änderungen sind noch nicht auf dem Server. Trotzdem abmelden?`)) return; await logout(); dlg.close(); };
     const li=document.getElementById('btnLogin2'); if(li) li.onclick=loginDialog;
+    plEinstellungenBinden();
     document.getElementById('btnExport').onclick=exportJson;
     document.getElementById('importFile').onchange=e=>{ const f=e.target.files[0]; if(f) importJson(f); };
     document.getElementById('fm').onsubmit=e=>{ e.preventDefault(); const n=e.target.elements.n.value.trim(); if(!n) return;
@@ -673,9 +681,321 @@ function einstellungen(){
 function saveSettings(){ write(SETTINGS_ID, settings); render(); }
 function upsert(c){ const i=vertraege.findIndex(x=>x.id===c.id); if(i<0) vertraege.push(c); else vertraege[i]=c; write(c.id,c); render(); }
 
+/* ---------- Paperless & KI ---------- */
+const K_PL_TOKEN='vertraege-pl-token', K_KI='vertraege-ki', K_VS='vertraege-vorschlaege';
+const KI = {
+  openai:{label:'ChatGPT (OpenAI)', model:'gpt-6-luna', placeholder:'sk-…'},
+  anthropic:{label:'Claude (Anthropic)', model:'claude-sonnet-5-5', placeholder:'sk-ant-…'}
+};
+let ki = ls.get(K_KI,{provider:'openai',keys:{}}); if(!ki.keys) ki.keys={};
+let vorschlaege = ls.get(K_VS,[]);
+let plState = {laeuft:false, info:'', neu:0, fehler:''};
+let plOffen = false, plLetzterAuto = 0;
+const kiKey = () => ki.keys[ki.provider] || '';
+const plToken = () => ls.get(K_PL_TOKEN,'') || '';
+const plBase = () => String(settings.paperlessUrl||'').trim().replace(/\/+$/,'');
+const plFilter = () => settings.paperlessFilter || null;
+const plBereit = () => !!(plBase() && plToken() && plFilter() && plFilter().id);
+const docLink = id => `${plBase()}/documents/${id}/details`;
+function saveVs(){ ls.set(K_VS,vorschlaege); }
+
+const PL_ERR = {
+  pl_offline:'Paperless ist nicht erreichbar. Prüf die Adresse und ob die App in Paperless als erlaubte Quelle (CORS) eingetragen ist.',
+  pl_token:'Paperless hat den API-Token abgelehnt.',
+  pl_http:'Paperless hat einen Fehler gemeldet.',
+  nokey:'Für die Auswertung fehlt noch der KI-Schlüssel. Du hinterlegst ihn unter Einstellungen.',
+  badkey:'Der KI-Schlüssel wurde abgelehnt. Prüf ihn unter Einstellungen.',
+  credit:'Das Guthaben beim KI-Anbieter ist aufgebraucht.',
+  rate_limited:'Zu viele Anfragen beim KI-Anbieter. Versuch es gleich noch einmal.',
+  offline:'Keine Internetverbindung.',
+  http:'Der KI-Anbieter hat einen Fehler gemeldet.'
+};
+const errText = e => PL_ERR[e && e.code] || 'Etwas ist schiefgelaufen. Versuch es noch einmal.';
+
+async function plFetch(pfad){
+  let url = plBase()+pfad;
+  if(/^https?:/.test(pfad)){ const u=new URL(pfad); url=plBase()+u.pathname+u.search; }
+  let r;
+  try{ r=await fetch(url,{headers:{Authorization:'Token '+plToken(), Accept:'application/json'}}); }
+  catch(e){ throw {code:'pl_offline'}; }
+  if(r.status===401||r.status===403) throw {code:'pl_token'};
+  if(!r.ok) throw {code:'pl_http'};
+  return r.json();
+}
+async function plAlle(pfad){
+  let out=[], next=pfad, n=0;
+  while(next && n<60){ const d=await plFetch(next); out=out.concat(d.results||[]); next=d.next; n++; }
+  return out;
+}
+
+async function kiJson(prompt){
+  const key=kiKey(); if(!key) throw {code:'nokey'};
+  if(!navigator.onLine) throw {code:'offline'};
+  const P=KI[ki.provider]; let r;
+  try{
+    r = ki.provider==='openai'
+      ? await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',
+          headers:{'content-type':'application/json',authorization:'Bearer '+key},
+          body:JSON.stringify({model:P.model,max_completion_tokens:8000,response_format:{type:'json_object'},messages:[{role:'user',content:prompt}]})})
+      : await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+          headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+          body:JSON.stringify({model:P.model,max_tokens:3000,messages:[{role:'user',content:prompt}]})});
+  }catch(e){ throw {code:'offline'}; }
+  if(!r.ok) throw {code: r.status===401?'badkey' : r.status===429?'rate_limited' : r.status===402?'credit' : 'http'};
+  const d=await r.json();
+  const text = ki.provider==='openai'
+    ? ((d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'')
+    : (d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+  const clean=text.replace(/```json|```/g,'').trim(); const m=clean.match(/\{[\s\S]*\}/);
+  return JSON.parse(m?m[0]:clean);
+}
+
+function kiPrompt(doc, absender, bekannte){
+  return `Du liest Dokumente eines privaten Haushalts in Deutschland aus (Versicherungen, Energie, Telefon/Internet, Abos, Mitgliedschaften, Kredite/Leasing) und gibst die Vertragsdaten als JSON zurück. Heute ist der ${iso(heute())}.
+
+Haushaltsmitglieder und versicherbare Dinge: ${settings.mitglieder.map(m=>m.name).join(', ')||'keine angegeben'}.
+
+Bereits bekannte Verträge (ref | Gegenstand | Anbieter | Vertragsnummer | Kundennummer):
+${bekannte.map(b=>`- ${b.ref} | ${b.gegenstand||''} | ${b.partner||''} | ${b.nummer||''} | ${b.kundennummer||''}`).join('\n')||'- keine'}
+
+Dokument "${doc.title||''}" vom ${String(doc.created||'').slice(0,10)}${absender?`, Absender laut Paperless: ${absender}`:''}.
+Text (per OCR erkannt, kann Fehler enthalten):
+"""
+${String(doc.content||'').slice(0,14000)}
+"""
+
+Antworte nur mit einem JSON-Objekt in genau dieser Form:
+{
+ "art": "neu" | "stand" | "irrelevant",
+ "ref": "ref eines bekannten Vertrags, wenn das Dokument zu ihm gehört (gleiche Vertragsnummer oder eindeutig derselbe Vertrag), sonst null",
+ "dokumentart": "z. B. Versicherungsschein, Beitragsrechnung, Nachtrag, Vertragsbestätigung, Preisanpassung",
+ "vertrag": {"gegenstand": "kurz und eindeutig, z. B. Hausratversicherung, Kfz-Versicherung VW Touran, Strom", "kategorie": "versicherung|energie|tele|abo|mitglied|kredit|sonst", "partner": "Versicherer oder Anbieter", "nummer": "Vertrags- bzw. Versicherungsscheinnummer", "kundennummer": "Kundennummer", "inhaber": "Name aus der Mitgliederliste oder null", "betrifft": ["Namen aus der Mitgliederliste"], "objekt": "versicherter Gegenstand, wenn er nicht in der Liste steht, sonst null"},
+ "stand": {"tarif": "Tarifname", "beginn": "JJJJ-MM-TT", "ende": "JJJJ-MM-TT, Ende der aktuellen Laufzeit oder Versicherungsperiode", "beitrag": Zahl in Euro pro Zahlung, "zahlweise": "monatlich|quartal|halbjahr|jahr", "fristWert": Zahl, "fristEinheit": "monate|wochen|tage", "fristModus": "ablauf|jederzeit|monatsende", "verlWert": Zahl, "verlEinheit": "jahre|monate|keine", "kwh": Arbeitspreis in ct/kWh oder null, "grundpreis": Euro pro Monat oder null, "notiz": "kurze wichtige Hinweise, z. B. Beitragserhöhung, Sonderkündigungsrecht, Selbstbeteiligung"},
+ "unsicher": ["Feldnamen aus vertrag oder stand, die nicht im Dokument stehen und geschätzt wurden"]
+}
+
+Regeln:
+- Erfinde nichts. Was nicht im Text steht, ist null. Ausnahme Kündigungsfrist und Verlängerung: Dort setzt du typische Werte ein (Versicherungen: 3 Monate zum Ablauf, Verlängerung 1 Jahr; Strom, Gas, Telefon und Internet nach der Mindestlaufzeit: 1 Monat jederzeit, Verlängerung 1 Monat) und führst die Felder in "unsicher" auf.
+- "stand", wenn das Dokument zu einem bekannten Vertrag gehört (z. B. neue Beitragsrechnung), "neu" bei einem noch unbekannten Vertrag, "irrelevant" bei Dokumenten ohne Vertragsdaten (Werbung, Schadenmeldung, allgemeine Bedingungen ohne Bezug).
+- Der Beitrag ist der Betrag pro Zahlung passend zur Zahlweise, inklusive Versicherungsteuer.
+- Datumsangaben immer im Format JJJJ-MM-TT.`;
+}
+
+const ENUM = {kategorie:KAT.map(k=>k.k), zahlweise:Object.keys(ZW), fristEinheit:['monate','wochen','tage'], fristModus:['ablauf','jederzeit','monatsende'], verlEinheit:['jahre','monate','keine']};
+const okDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s||'') ? s : '';
+const numOr = (x,d='') => { if(x===null||x===undefined||x==='') return d; const n=typeof x==='number'?x:parseFloat(String(x).replace(',','.')); return isNaN(n)?d:n; };
+const pick = (v,list,d) => list.includes(v)?v:d;
+const txt = v => (v===null||v===undefined) ? '' : String(v);
+function normStand(s){ s=s||{}; return { vid:'s'+uid().slice(0,8), tarif:txt(s.tarif), beginn:okDate(s.beginn), ende:okDate(s.ende), beitrag:numOr(s.beitrag),
+  zahlweise:pick(s.zahlweise,ENUM.zahlweise,'monatlich'), fristWert:numOr(s.fristWert,3), fristEinheit:pick(s.fristEinheit,ENUM.fristEinheit,'monate'),
+  fristModus:pick(s.fristModus,ENUM.fristModus,'ablauf'), verlWert:numOr(s.verlWert,1), verlEinheit:pick(s.verlEinheit,ENUM.verlEinheit,'jahre'),
+  kwh:numOr(s.kwh), grundpreis:numOr(s.grundpreis), notiz:txt(s.notiz), erfasst:iso(heute()) }; }
+function normVertrag(v){ v=v||{}; const byName=n=>(settings.mitglieder.find(m=>m.name.toLowerCase()===String(n||'').trim().toLowerCase())||{}).id;
+  return { gegenstand:txt(v.gegenstand)||'Unbenannter Vertrag', kategorie:pick(v.kategorie,ENUM.kategorie,'sonst'), partner:txt(v.partner), nummer:txt(v.nummer),
+    kundennummer:txt(v.kundennummer), inhaber:byName(v.inhaber)||'', betrifft:(Array.isArray(v.betrifft)?v.betrifft:[]).map(byName).filter(Boolean), objekt:txt(v.objekt) }; }
+const UNS = {fristWert:'Kündigungsfrist', fristEinheit:'Kündigungsfrist', fristModus:'Kündigungsart', verlWert:'Verlängerung', verlEinheit:'Verlängerung', ende:'Laufzeitende', beginn:'Beginn', beitrag:'Beitrag', zahlweise:'Zahlweise', tarif:'Tarif', nummer:'Vertragsnummer', kundennummer:'Kundennummer', partner:'Anbieter', inhaber:'Inhaber', betrifft:'Betrifft'};
+const unsText = list => [...new Set((list||[]).map(f=>UNS[String(f).split('.').pop()]||String(f).split('.').pop()))].join(', ');
+
+function markErledigt(ids){
+  settings={...settings, paperlessErledigt:[...new Set([...(settings.paperlessErledigt||[]), ...ids])]};
+  write(SETTINGS_ID, settings);
+}
+async function plNeueDokumente(){
+  const done=new Set(settings.paperlessErledigt||[]);
+  vertraege.forEach(c=>(c.dokumente||[]).forEach(d=>done.add(d.id)));
+  vorschlaege.forEach(p=>done.add(p.docId));
+  const f=plFilter();
+  const q = f.typ==='d' ? `document_type__id__in=${encodeURIComponent(f.id)}` : `tags__id__all=${encodeURIComponent(f.id)}`;
+  const docs=await plAlle(`/api/documents/?${q}&page_size=100&ordering=created`);
+  return docs.filter(d=>!done.has(d.id));
+}
+
+async function plAuswerten(opts){
+  opts=opts||{};
+  if(plState.laeuft) return;
+  if(!plBereit()){ if(!opts.auto){ plState.fehler='Paperless ist noch nicht eingerichtet.'; renderPl(); } return; }
+  plState={laeuft:true, info:'Frage Paperless nach neuen Dokumenten …', neu:0, fehler:''}; renderPl();
+  try{
+    const docs=await plNeueDokumente();
+    plState.neu=docs.length;
+    if(!docs.length){ plState.info = opts.auto ? '' : 'Keine neuen Dokumente in Paperless.'; return; }
+    if(opts.auto && (docs.length>5 || !kiKey())){ plState.info=''; return; }
+    if(!kiKey()) throw {code:'nokey'};
+    const absender={}; try{ (await plAlle('/api/correspondents/?page_size=500')).forEach(c=>absender[c.id]=c.name); }catch(e){}
+    let i=0;
+    for(const doc of docs){
+      i++; plState.info=`Werte Dokument ${i} von ${docs.length} aus: ${doc.title||''}`; renderPl();
+      const bekannte=[
+        ...vertraege.filter(c=>istAktiv(c)).map(c=>({ref:c.id,gegenstand:c.gegenstand,partner:c.partner,nummer:c.nummer,kundennummer:c.kundennummer})),
+        ...vorschlaege.filter(p=>p.art==='neu').map(p=>({ref:p.pid,...p.vertrag}))];
+      let res=null;
+      for(let versuch=0; versuch<2 && !res; versuch++){
+        try{ res=await kiJson(kiPrompt(doc, absender[doc.correspondent], bekannte)); }
+        catch(e){ if(['nokey','badkey','credit','offline'].includes(e.code)) throw e; if(e.code==='rate_limited') await new Promise(r=>setTimeout(r,15000)); }
+      }
+      if(!res) continue;
+      if(res.art==='irrelevant'){ markErledigt([doc.id]); plState.neu--; continue; }
+      const ref = res.ref && (vertraege.some(c=>c.id===res.ref) || vorschlaege.some(p=>p.pid===res.ref)) ? res.ref : null;
+      vorschlaege.push({ pid:'p'+uid().slice(0,10), docId:doc.id, docTitel:doc.title||'', docDatum:String(doc.created||'').slice(0,10),
+        dokumentart:txt(res.dokumentart), unsicher:Array.isArray(res.unsicher)?res.unsicher:[],
+        art: ref?'stand':'neu', ref, vertrag:normVertrag(res.vertrag), stand:normStand(res.stand) });
+      plState.neu--; saveVs();
+    }
+    plState.info='';
+  }catch(e){ if(!opts.auto) plState.fehler=errText(e); plState.info=''; }
+  finally{ plState.laeuft=false; renderPl(); }
+}
+function plAuto(){
+  if(!plBereit() || !navigator.onLine || Date.now()-plLetzterAuto < 10*60*1000) return;
+  plLetzterAuto=Date.now(); plAuswerten({auto:true});
+}
+
+function mergeStand(versionen, st){
+  const vs=[...versionen];
+  const i = st.beginn ? vs.findIndex(v=>v.beginn===st.beginn) : -1;
+  if(i>=0){ const m={...vs[i]}; for(const [k,val] of Object.entries(st)) if(k!=='vid' && val!=='' && val!=null) m[k]=val; vs[i]=m; }
+  else vs.push(st);
+  return vs.sort((a,b)=>(a.beginn||'9999').localeCompare(b.beginn||'9999'));
+}
+function annehmen(pid, bearbeiten){
+  const p=vorschlaege.find(x=>x.pid===pid); if(!p) return;
+  let c, docs=[p];
+  if(p.art==='neu'){
+    docs=docs.concat(vorschlaege.filter(x=>x.ref===p.pid));
+    const uns=unsText(docs.flatMap(d=>d.unsicher));
+    c={id:uid(), status:'aktiv', ...p.vertrag, paperless:docLink(p.docId), notizen: uns?`Aus Paperless übernommen, bitte prüfen: ${uns}`:'', versionen:[], dokumente:[]};
+  } else {
+    const orig=vertraege.find(x=>x.id===p.ref);
+    if(!orig){ if(vorschlaege.some(x=>x.pid===p.ref)) return annehmen(p.ref, bearbeiten); return; }
+    c={...orig, versionen:[...orig.versionen], dokumente:[...(orig.dokumente||[])]};
+    if(!c.paperless) c.paperless=docLink(p.docId);
+    for(const k of ['partner','nummer','kundennummer','objekt']) if(!c[k] && p.vertrag[k]) c[k]=p.vertrag[k];
+  }
+  docs.sort((a,b)=>(a.docDatum||'').localeCompare(b.docDatum||''));
+  for(const d of docs){
+    c.versionen=mergeStand(c.versionen, {...d.stand, notiz:[d.dokumentart, d.stand.notiz].filter(Boolean).join(': ')});
+    c.dokumente.push({id:d.docId, titel:d.docTitel, art:d.dokumentart, datum:d.docDatum});
+  }
+  const weg=new Set(docs.map(d=>d.pid)); vorschlaege=vorschlaege.filter(x=>!weg.has(x.pid)); saveVs();
+  markErledigt(docs.map(d=>d.docId));
+  upsert(c);
+  if(bearbeiten) vertragForm(c); else renderPl();
+}
+function verwerfen(pid){
+  const weg=vorschlaege.filter(x=>x.pid===pid || x.ref===pid);
+  vorschlaege=vorschlaege.filter(x=>!weg.includes(x)); saveVs();
+  markErledigt(weg.map(x=>x.docId)); renderPl();
+}
+function alleAnnehmen(){
+  vorschlaege.filter(x=>x.art==='neu').forEach(p=>{ if(vorschlaege.includes(p)) annehmen(p.pid,false); });
+  vorschlaege.filter(x=>x.art==='stand').forEach(p=>{ if(vorschlaege.includes(p)) annehmen(p.pid,false); });
+}
+
+function renderPl(){ renderPlNote(); if(plOffen && dlg.open) plDialog(true); }
+function renderPlNote(){
+  const n=document.getElementById('plNote'); if(!n) return;
+  const vs=vorschlaege.filter(p=>p.art==='neu' || vertraege.some(c=>c.id===p.ref)).length;
+  let t='', btn='';
+  if(plState.laeuft && plState.info){ t=plState.info; }
+  else if(vs){ t=`${vs} ${vs===1?'Vorschlag':'Vorschläge'} aus Paperless ${vs===1?'wartet':'warten'} auf deine Prüfung.`; btn='Ansehen'; }
+  else if(plState.neu>0){ t=`${plState.neu} neue ${plState.neu===1?'Dokument':'Dokumente'} in Paperless.`; btn='Auswerten'; }
+  n.innerHTML = t ? esc(t)+(btn?` <button class="btn" id="plNoteBtn" style="margin-left:8px;padding:6px 12px">${btn}</button>`:'') : '';
+  n.hidden=!t;
+  const b=document.getElementById('plNoteBtn'); if(b) b.onclick=()=>plDialog();
+}
+function standKurz(s){
+  const teile=[];
+  if(s.beitrag!=='') teile.push(`${EUR.format(+s.beitrag)} ${(ZW[s.zahlweise]||ZW.monatlich)[0]}`);
+  if(s.beginn||s.ende) teile.push(`${fmt(parse(s.beginn))} bis ${fmt(parse(s.ende))}`);
+  return teile.join(', ');
+}
+function plDialog(reRender){
+  const scroll = reRender ? (sheet.querySelector('.sheet-body')||{}).scrollTop||0 : 0;
+  const neu=vorschlaege.filter(p=>p.art==='neu');
+  const standAlt=vorschlaege.filter(p=>p.art==='stand' && vertraege.some(c=>c.id===p.ref));
+  const karte = (p, titel, unter, extra) => `<div class="card" style="--cat:${katColor(p.vertrag.kategorie)};cursor:default;margin-top:28px">
+      <span class="tab">${esc(titel)}</span>
+      <h3>${esc(unter)}</h3>${extra}
+      <div class="actions" style="margin-top:12px"><button class="btn primary" data-ok="${p.pid}">Übernehmen</button><button class="btn" data-edit="${p.pid}">Bearbeiten</button><button class="btn danger" data-no="${p.pid}">Verwerfen</button></div></div>`;
+  const listeNeu = neu.map(p=>{
+    const dazu=vorschlaege.filter(x=>x.ref===p.pid);
+    const alle=[p,...dazu].sort((a,b)=>(a.docDatum||'').localeCompare(b.docDatum||''));
+    const akt=alle[alle.length-1].stand, uns=unsText(alle.flatMap(d=>d.unsicher));
+    const sub=[p.vertrag.partner, akt.tarif].filter(Boolean).join(', ');
+    const nr=[p.vertrag.nummer&&`Vertragsnr. ${p.vertrag.nummer}`, p.vertrag.kundennummer&&`Kundennr. ${p.vertrag.kundennummer}`].filter(Boolean).join(', ');
+    return karte(p, `Neu: ${katName(p.vertrag.kategorie)}`, p.vertrag.gegenstand,
+      `${sub?`<p class="sub">${esc(sub)}</p>`:''}${nr?`<p class="sub">${esc(nr)}</p>`:''}
+       <p class="sub">${esc(standKurz(akt))}</p>
+       <p class="sub">${alle.length===1?`Aus „${esc(p.docTitel)}“`:`Aus ${alle.length} Dokumenten, Historie mit ${new Set(alle.map(d=>d.stand.beginn)).size} Ständen`}</p>
+       ${uns?`<p class="due soon" style="font-weight:400">Bitte prüfen: ${esc(uns)}</p>`:''}`);
+  }).join('');
+  const listeStand = standAlt.map(p=>{
+    const c=vertraege.find(x=>x.id===p.ref);
+    return karte({...p, vertrag:{...p.vertrag, kategorie:c.kategorie}}, 'Neuer Stand', c.gegenstand,
+      `<p class="sub">${esc(p.dokumentart||p.docTitel)}</p><p class="sub">${esc(standKurz(p.stand))}</p>`);
+  }).join('');
+  const anzahl=neu.length+standAlt.length;
+  open('Aus Paperless einlesen', !plBereit()
+    ? `<p>Damit die App deine Vertragsdokumente aus Paperless lesen kann, trag unter Einstellungen die Paperless-Adresse, deinen API-Token und den Tag bzw. Dokumenttyp deiner Verträge ein.</p><div class="actions"><button class="btn primary" id="plSetup">Zu den Einstellungen</button></div>`
+    : `${plState.fehler?`<div class="status-box soon"><strong>${esc(plState.fehler)}</strong></div>`:''}
+       ${plState.laeuft?`<div class="status-box"><strong>${esc(plState.info)}</strong></div>`:''}
+       <p class="hint" style="margin:0 0 12px">Quelle: ${plFilter().typ==='d'?'Dokumenttyp':'Tag'} „${esc(plFilter().name)}“${plState.neu>0&&!plState.laeuft?`, ${plState.neu} neue Dokumente`:''}</p>
+       <div class="actions"><button class="btn${anzahl?'':' primary'}" id="plRun" ${plState.laeuft?'disabled':''}>Neue Dokumente auswerten</button>
+       ${anzahl>1?`<button class="btn primary" id="plAll">Alle ${anzahl} übernehmen</button>`:''}</div>
+       ${anzahl?listeNeu+listeStand:(!plState.laeuft?'<p class="hint" style="margin-top:16px">Gerade keine offenen Vorschläge.</p>':'')}
+       <p style="margin-top:28px"><button class="btn" id="plReset" style="font-weight:400">Übersprungene Dokumente erneut prüfen</button></p>`);
+  plOffen=true;
+  const body=sheet.querySelector('.sheet-body'); if(reRender) body.scrollTop=scroll;
+  const s=document.getElementById('plSetup'); if(s) s.onclick=einstellungen;
+  const run=document.getElementById('plRun'); if(run) run.onclick=()=>{ plState.fehler=''; plAuswerten(); };
+  const all=document.getElementById('plAll'); if(all) all.onclick=()=>{ if(confirm('Alle Vorschläge ungeprüft übernehmen? Du kannst die Verträge danach jederzeit bearbeiten.')) alleAnnehmen(); };
+  const rs=document.getElementById('plReset'); if(rs) rs.onclick=()=>{ if(!confirm('Alle früher übersprungenen oder verworfenen Dokumente beim nächsten Auswerten noch einmal prüfen?')) return; settings={...settings, paperlessErledigt:[]}; saveSettings(); plDialog(true); };
+  sheet.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>annehmen(b.dataset.ok,false));
+  sheet.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>annehmen(b.dataset.edit,true));
+  sheet.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>verwerfen(b.dataset.no));
+}
+dlg.addEventListener('close',()=>{ plOffen=false; });
+
+function plEinstellungenHtml(){
+  const f=plFilter();
+  return `<fieldset><legend>Paperless</legend>
+      <label>Adresse<input id="plUrl" type="url" autocapitalize="off" value="${esc(settings.paperlessUrl||'')}" placeholder="https://paperless.…"></label>
+      <label>API-Token<input id="plTok" type="password" autocomplete="off" value="${esc(plToken())}"></label>
+      <p class="hint">Den Token findest du in Paperless oben rechts unter „Mein Profil“ bei „API Auth Token“. Er bleibt nur auf diesem Gerät.</p>
+      <label>Quelle der Vertragsdokumente<select id="plSel">${f?`<option value="${f.typ}:${f.id}" selected>${f.typ==='d'?'Dokumenttyp':'Tag'}: ${esc(f.name)}</option>`:'<option value="">Erst laden</option>'}</select></label>
+      <div class="actions"><button class="btn" id="plLoad" type="button">Tags und Dokumenttypen laden</button></div>
+      <p class="hint" id="plMsg" style="margin-top:10px"></p>
+    </fieldset>
+    <fieldset><legend>KI für die Auswertung</legend>
+      <label>Anbieter<select id="kiProv">${Object.entries(KI).map(([k,x])=>`<option value="${k}"${k===ki.provider?' selected':''}>${x.label}</option>`).join('')}</select></label>
+      <label>API-Schlüssel<input id="kiKey" type="password" autocomplete="off" value="${esc(kiKey())}" placeholder="${KI[ki.provider].placeholder}"></label>
+      <p class="hint">Bleibt nur auf diesem Gerät. Pro Dokument fallen beim Anbieter wenige Cent an.</p>
+    </fieldset>`;
+}
+function plEinstellungenBinden(){
+  const msg=t=>{ const m=document.getElementById('plMsg'); if(m) m.textContent=t; };
+  document.getElementById('plUrl').onchange=e=>{ settings={...settings, paperlessUrl:e.target.value.trim()}; saveSettings(); };
+  document.getElementById('plTok').onchange=e=>ls.set(K_PL_TOKEN, e.target.value.trim());
+  document.getElementById('plSel').onchange=e=>{ const o=e.target.selectedOptions[0]; if(!o||!o.value) return; const [typ,id]=o.value.split(':');
+    settings={...settings, paperlessFilter:{typ, id:+id, name:o.dataset.name||o.textContent}}; saveSettings(); plLetzterAuto=0; };
+  document.getElementById('plLoad').onclick=async()=>{
+    msg('Lade …');
+    try{
+      const [tags,typen]=await Promise.all([plAlle('/api/tags/?page_size=500'), plAlle('/api/document_types/?page_size=500')]);
+      const f=plFilter(), cur=f?`${f.typ}:${f.id}`:'';
+      const opt=(typ,x)=>`<option value="${typ}:${x.id}" data-name="${esc(x.name)}"${`${typ}:${x.id}`===cur?' selected':''}>${esc(x.name)} (${x.document_count??0})</option>`;
+      document.getElementById('plSel').innerHTML=`<option value="">Bitte wählen</option><optgroup label="Tags">${tags.map(x=>opt('t',x)).join('')}</optgroup><optgroup label="Dokumenttypen">${typen.map(x=>opt('d',x)).join('')}</optgroup>`;
+      msg(`Verbindung klappt: ${tags.length} Tags und ${typen.length} Dokumenttypen gefunden.`);
+    }catch(e){ msg(errText(e)); }
+  };
+  document.getElementById('kiProv').onchange=e=>{ ki.provider=e.target.value; ls.set(K_KI,ki); const k=document.getElementById('kiKey'); k.value=kiKey(); k.placeholder=KI[ki.provider].placeholder; };
+  document.getElementById('kiKey').onchange=e=>{ ki.keys[ki.provider]=e.target.value.trim(); ls.set(K_KI,ki); };
+}
+
 /* ---------- Events ---------- */
 document.getElementById('btnNew').onclick=()=>vertragForm(null);
 document.getElementById('btnSettings').onclick=einstellungen;
+document.getElementById('btnPl').onclick=()=>plDialog();
 document.getElementById('filters').onclick=e=>{ const b=e.target.closest('[data-f]'); if(b){ filter=b.dataset.f; render(); } };
 document.getElementById('list').onclick=e=>{ const b=e.target.closest('[data-id]'); if(b) detail(b.dataset.id); };
 document.getElementById('search').oninput=e=>{ suche=e.target.value; render(); };
