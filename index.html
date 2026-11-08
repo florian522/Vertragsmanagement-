@@ -18,7 +18,7 @@
   --bg:#E8EDEF; --surface:#FFFFFF; --soft:#F3F6F7; --ink:#17242A; --muted:#58676E; --line:#D0D9DD;
   --accent:#1D5A78; --accent-ink:#FFFFFF; --warn:#A8401A; --warn-bg:#F6E1D6; --ok:#2E6A4E;
   --c-versicherung:#2D6A8E; --c-energie:#B98317; --c-tele:#69498F; --c-abo:#AE416C;
-  --c-mitglied:#3C7A4E; --c-kredit:#7B5939; --c-sonst:#69767E;
+  --c-mitglied:#3C7A4E; --c-kredit:#7B5939; --c-arbeit:#4A58A8; --c-sonst:#69767E;
   color-scheme:light;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
@@ -28,7 +28,7 @@
     --bg:#11191D; --surface:#1A252A; --soft:#212E34; --ink:#E6EDEF; --muted:#9AAAB1; --line:#2E3D44;
     --accent:#6FB3D6; --accent-ink:#0E1A20; --warn:#F09A72; --warn-bg:#3A231A; --ok:#7CC49F;
     --c-versicherung:#5FA3CB; --c-energie:#E0AE45; --c-tele:#A688CF; --c-abo:#E07AA2;
-    --c-mitglied:#76B887; --c-kredit:#C49A72; --c-sonst:#9AA6AD;
+    --c-mitglied:#76B887; --c-kredit:#C49A72; --c-arbeit:#97A3E6; --c-sonst:#9AA6AD;
     color-scheme:dark;
   }
 }
@@ -36,7 +36,7 @@
   --bg:#11191D; --surface:#1A252A; --soft:#212E34; --ink:#E6EDEF; --muted:#9AAAB1; --line:#2E3D44;
   --accent:#6FB3D6; --accent-ink:#0E1A20; --warn:#F09A72; --warn-bg:#3A231A; --ok:#7CC49F;
   --c-versicherung:#5FA3CB; --c-energie:#E0AE45; --c-tele:#A688CF; --c-abo:#E07AA2;
-  --c-mitglied:#76B887; --c-kredit:#C49A72; --c-sonst:#9AA6AD;
+  --c-mitglied:#76B887; --c-kredit:#C49A72; --c-arbeit:#97A3E6; --c-sonst:#9AA6AD;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -68,9 +68,17 @@ label.pl-row small{color:var(--muted)}
 .hero h1 .name{display:block;width:100%;white-space:nowrap;font-size:40px;line-height:1.1}
 .hero .when{margin:8px 0 0;color:var(--muted);font:500 1.2rem/1.3 "Bricolage Grotesque",system-ui,sans-serif}
 .hero.urgent .when{color:var(--warn)}
-.sum{display:flex;gap:28px;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:18px}
-.sum div{font-size:.9rem;color:var(--muted)}
-.sum strong{display:block;font-size:1.3rem;color:var(--ink);font-family:"Bricolage Grotesque",sans-serif;font-variant-numeric:tabular-nums}
+.sum{padding:6px 0 12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:18px}
+.sumtab{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.sumtab th{font-weight:400;font-size:.8rem;color:var(--muted);text-align:right;padding:6px 0 4px}
+.sumtab td{padding:9px 0;border-top:1px solid var(--line);text-align:right;white-space:nowrap;font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:1.02rem}
+.sumtab td:first-child{text-align:left;white-space:normal;font-family:inherit;font-weight:400;font-size:.95rem;padding-right:10px}
+.sumtab td:first-child small{display:block;color:var(--muted);font-size:.78rem}
+.sumtab td + td{padding-left:14px}
+.sumtab tr.grp{cursor:pointer}
+.sumtab tr.grp.on td{color:var(--accent)}
+.sum-meta{margin:10px 0 0;font-size:.88rem;color:var(--muted)}
+.sum-meta strong{color:var(--warn)}
 
 /* Filter */
 .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;scrollbar-width:none;touch-action:pan-x}
@@ -176,10 +184,18 @@ const KAT = [
   {k:'tele', n:'Telekommunikation'},
   {k:'abo', n:'Abo & Streaming'},
   {k:'mitglied', n:'Mitgliedschaft'},
-  {k:'kredit', n:'Kredit & Finanzierung'},
+  {k:'kredit', n:'Kredit & Hausbau'},
+  {k:'arbeit', n:'Arbeitsvertrag'},
   {k:'sonst', n:'Sonstiges'}
 ];
-const katName = k => (KAT.find(x=>x.k===k)||KAT[6]).n;
+const GRUPPEN = [
+  {k:'vers', n:'Versicherungen', kat:['versicherung']},
+  {k:'fix', n:'Laufende Kosten', hint:'Energie, Telefon, Sonstiges', kat:['energie','tele','sonst']},
+  {k:'frei', n:'Abos & Mitgliedschaften', kat:['abo','mitglied']},
+  {k:'kredit', n:'Kredite & Hausbau', kat:['kredit']},
+  {k:'arbeit', n:'Arbeitsverträge', kat:['arbeit']}
+];
+const katName = k => (KAT.find(x=>x.k===k)||KAT.find(x=>x.k==='sonst')).n;
 const katColor = k => `var(--c-${KAT.some(x=>x.k===k)?k:'sonst'})`;
 const ZW = {monatlich:['monatlich',12], quartal:['vierteljährlich',4], halbjahr:['halbjährlich',2], jahr:['jährlich',1]};
 const EUR = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
@@ -386,7 +402,7 @@ function init(){
   checkUpdate(); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') checkUpdate(); });
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') flush().then(sync); });
 }
-const APP_VERSION='2026-11-08-1';
+const APP_VERSION='2026-11-08-2';
 async function checkUpdate(){
   if(!location.protocol.startsWith('http')) return;
   try{
@@ -446,10 +462,12 @@ function render(){
   fitHero();
   // Summen
   const sum=document.getElementById('sum');
-  const jahr = aktiv.reduce((s,c)=>s+jahresBeitrag(aktuell(c)),0);
   const bald = aktiv.filter(istBald).length;
   sum.hidden=!vertraege.length;
-  sum.innerHTML=`<div><strong>${EUR.format(jahr/12)}</strong>pro Monat</div><div><strong>${EUR.format(jahr)}</strong>pro Jahr</div><div><strong>${aktiv.length}</strong>aktive Verträge</div>${bald?`<div><strong style="color:var(--warn)">${bald}</strong>bald kündbar</div>`:''}`;
+  const zeilen = GRUPPEN.map(g=>{ const cs=aktiv.filter(c=>g.kat.includes(c.kategorie)); return {g, n:cs.length, jahr:cs.reduce((s,c)=>s+jahresBeitrag(aktuell(c)),0)}; }).filter(z=>z.n);
+  sum.innerHTML = `<table class="sumtab"><thead><tr><th></th><th>pro Monat</th><th>pro Jahr</th></tr></thead><tbody>
+    ${zeilen.map(z=>`<tr class="grp${filter==='g:'+z.g.k?' on':''}" data-f="g:${z.g.k}"><td>${esc(z.g.n)}<small>${z.n} ${z.n===1?'Vertrag':'Verträge'}${z.g.hint?`, ${esc(z.g.hint)}`:''}</small></td><td>${EUR.format(z.jahr/12)}</td><td>${EUR.format(z.jahr)}</td></tr>`).join('')}
+    </tbody></table><p class="sum-meta">${aktiv.length} aktive Verträge${bald?`, <strong>${bald} bald kündbar</strong>`:''}</p>`;
   // Filter
   const kats=[...new Set(vertraege.map(c=>c.kategorie))];
   const opts=[['alle','Alle'],['bald','Bald kündbar'],...KAT.filter(k=>kats.includes(k.k)).map(k=>[k.k,k.n]),['inaktiv','Beendet']];
@@ -461,7 +479,8 @@ function render(){
     if(filter==='inaktiv') { if(istAktiv(c)) return false; }
     else { if(!istAktiv(c)) return false;
       if(filter==='bald' && !istBald(c)) return false;
-      if(filter!=='alle' && filter!=='bald' && c.kategorie!==filter) return false; }
+      if(filter.startsWith('g:')){ const g=GRUPPEN.find(x=>'g:'+x.k===filter); if(g && !g.kat.includes(c.kategorie)) return false; }
+      else if(filter!=='alle' && filter!=='bald' && c.kategorie!==filter) return false; }
     if(q){ const v=aktuell(c); const hay=[c.gegenstand,c.partner,v.tarif,c.nummer,c.kundennummer,c.objekt].join(' ').toLowerCase(); if(!hay.includes(q)) return false; }
     return true;
   });
@@ -502,7 +521,7 @@ function versionFields(v){
     <label>Ende der Laufzeit<input type="date" name="ende" value="${esc(v.ende)}"></label>
   </div>
   <div class="grid2">
-    <label>Beitrag in €<input name="beitrag" inputmode="decimal" value="${v.beitrag!=null&&v.beitrag!==''?String(v.beitrag).replace('.',','):''}"></label>
+    <label>Betrag in €<input name="beitrag" inputmode="decimal" value="${v.beitrag!=null&&v.beitrag!==''?String(v.beitrag).replace('.',','):''}"></label>
     <label>Zahlweise${sel('zahlweise',Object.entries(ZW).map(([k,x])=>[k,x[0]]),v.zahlweise||'monatlich')}</label>
   </div>
   <div class="grid2">
@@ -630,7 +649,7 @@ function detail(id){
       ${row('Kundennummer',esc(c.kundennummer))}
       ${row('Inhaber',esc(mName(c.inhaber)))}
       ${row('Betrifft',esc(betrifft))}
-      ${row('Beitrag',`${EUR.format(+v.beitrag||0)} ${zw}, ${EUR.format(jahresBeitrag(v))} im Jahr`)}
+      ${row('Betrag',`${EUR.format(+v.beitrag||0)} ${zw}, ${EUR.format(jahresBeitrag(v))} im Jahr`)}
       ${row('Laufzeit',`${fmt(parse(v.beginn))} bis ${fmt(parse(v.ende))}`)}
       ${row('Verlängerung',verl)}
       ${row('Kündigungsfrist',esc(fristLabel))}
@@ -760,7 +779,7 @@ async function kiJson(prompt){
 }
 
 function kiPrompt(doc, absender, bekannte){
-  return `Du liest Dokumente eines privaten Haushalts in Deutschland aus (Versicherungen, Energie, Telefon/Internet, Abos, Mitgliedschaften, Kredite/Leasing) und gibst die Vertragsdaten als JSON zurück. Heute ist der ${iso(heute())}.
+  return `Du liest Dokumente eines privaten Haushalts in Deutschland aus (Versicherungen, Energie, Telefon/Internet, Abos, Mitgliedschaften, Kredite/Hausbau/Leasing, Arbeitsverträge) und gibst die Vertragsdaten als JSON zurück. Heute ist der ${iso(heute())}.
 
 Haushaltsmitglieder und versicherbare Dinge: ${settings.mitglieder.map(m=>m.name).join(', ')||'keine angegeben'}.
 
@@ -778,7 +797,7 @@ Antworte nur mit einem JSON-Objekt in genau dieser Form:
  "art": "neu" | "stand" | "irrelevant",
  "ref": "ref eines bekannten Vertrags, wenn das Dokument zu ihm gehört (gleiche Vertragsnummer oder eindeutig derselbe Vertrag), sonst null",
  "dokumentart": "z. B. Versicherungsschein, Beitragsrechnung, Nachtrag, Vertragsbestätigung, Preisanpassung",
- "vertrag": {"gegenstand": "kurz und eindeutig, z. B. Hausratversicherung, Kfz-Versicherung VW Touran, Strom", "kategorie": "versicherung|energie|tele|abo|mitglied|kredit|sonst", "partner": "Versicherer oder Anbieter", "nummer": "Vertrags- bzw. Versicherungsscheinnummer", "kundennummer": "Kundennummer", "inhaber": "Name aus der Mitgliederliste oder null", "betrifft": ["Namen aus der Mitgliederliste"], "objekt": "versicherter Gegenstand, wenn er nicht in der Liste steht, sonst null"},
+ "vertrag": {"gegenstand": "kurz und eindeutig, z. B. Hausratversicherung, Kfz-Versicherung VW Touran, Strom", "kategorie": "versicherung|energie|tele|abo|mitglied|kredit|arbeit|sonst (kredit = Kredite, Baufinanzierung, Hausbau, Leasing; arbeit = Arbeitsverträge)", "partner": "Versicherer oder Anbieter", "nummer": "Vertrags- bzw. Versicherungsscheinnummer", "kundennummer": "Kundennummer", "inhaber": "Name aus der Mitgliederliste oder null", "betrifft": ["Namen aus der Mitgliederliste"], "objekt": "versicherter Gegenstand, wenn er nicht in der Liste steht, sonst null"},
  "stand": {"tarif": "Tarifname", "beginn": "JJJJ-MM-TT", "ende": "JJJJ-MM-TT, Ende der aktuellen Laufzeit oder Versicherungsperiode", "beitrag": Zahl in Euro pro Zahlung, "zahlweise": "monatlich|quartal|halbjahr|jahr", "fristWert": Zahl, "fristEinheit": "monate|wochen|tage", "fristModus": "ablauf|jederzeit|monatsende", "verlWert": Zahl, "verlEinheit": "jahre|monate|keine", "kwh": Arbeitspreis in ct/kWh oder null, "grundpreis": Euro pro Monat oder null, "notiz": "kurze wichtige Hinweise, z. B. Beitragserhöhung, Sonderkündigungsrecht, Selbstbeteiligung"},
  "unsicher": ["Feldnamen aus vertrag oder stand, die nicht im Dokument stehen und geschätzt wurden"]
 }
@@ -786,7 +805,7 @@ Antworte nur mit einem JSON-Objekt in genau dieser Form:
 Regeln:
 - Erfinde nichts. Was nicht im Text steht, ist null. Ausnahme Kündigungsfrist und Verlängerung: Dort setzt du typische Werte ein (Versicherungen: 3 Monate zum Ablauf, Verlängerung 1 Jahr; Strom, Gas, Telefon und Internet nach der Mindestlaufzeit: 1 Monat jederzeit, Verlängerung 1 Monat) und führst die Felder in "unsicher" auf.
 - "stand", wenn das Dokument zu einem bekannten Vertrag gehört (z. B. neue Beitragsrechnung), "neu" bei einem noch unbekannten Vertrag, "irrelevant" bei Dokumenten ohne Vertragsdaten (Werbung, Schadenmeldung, allgemeine Bedingungen ohne Bezug).
-- Der Beitrag ist der Betrag pro Zahlung passend zur Zahlweise, inklusive Versicherungsteuer.
+- Der Beitrag ist der Betrag pro Zahlung passend zur Zahlweise, inklusive Versicherungsteuer. Bei Krediten die Rate, bei Arbeitsverträgen das Bruttogehalt.
 - Datumsangaben immer im Format JJJJ-MM-TT.`;
 }
 
@@ -1020,6 +1039,7 @@ function plEinstellungenBinden(){
 document.getElementById('btnNew').onclick=()=>vertragForm(null);
 document.getElementById('btnSettings').onclick=einstellungen;
 document.getElementById('btnPl').onclick=()=>plDialog();
+document.getElementById('sum').onclick=e=>{ const r=e.target.closest('[data-f]'); if(r){ filter = filter===r.dataset.f ? 'alle' : r.dataset.f; render(); } };
 document.getElementById('filters').onclick=e=>{ const b=e.target.closest('[data-f]'); if(b){ filter=b.dataset.f; render(); } };
 document.getElementById('list').onclick=e=>{ const b=e.target.closest('[data-id]'); if(b) detail(b.dataset.id); };
 document.getElementById('search').oninput=e=>{ suche=e.target.value; render(); };
